@@ -1,14 +1,36 @@
 import School from "../models/school.model.js";
 import haversine from "haversine-distance";
 
+const isValidLatitude = (latitude) => {
+    return !isNaN(latitude) && latitude >= -90 && latitude <= 90;
+};
+
+const isValidLongitude = (longitude) => {
+    return !isNaN(longitude) && longitude >= -180 && longitude <= 180;
+};
+
 export const addSchool = async (req, res) => {
     try {
         const { name, address, latitude, longitude } = req.body;
 
-        if (!name || !address || !latitude || !longitude) {
-            return res.status(400).json({ error: "All fields are required" });
+        // Validate that all fields are provided
+        if (!name || !address || latitude === undefined || longitude === undefined) {
+            return res.status(400).json({ error: "All fields (name, address, latitude, longitude) are required." });
+        }
+        if (typeof name !== 'string' || name.trim() === '') {
+            return res.status(400).json({ error: "Name must be a non-empty string." });
         }
 
+        if (typeof address !== 'string' || address.trim() === '') {
+            return res.status(400).json({ error: "Address must be a non-empty string." });
+        }
+        if (!isValidLatitude(parseFloat(latitude))) {
+            return res.status(400).json({ error: "Invalid latitude. Must be a number between -90 and 90." });
+        }
+
+        if (!isValidLongitude(parseFloat(longitude))) {
+            return res.status(400).json({ error: "Invalid longitude. Must be a number between -180 and 180." });
+        }
         const newSchool = await School.create({ name, address, latitude, longitude });
         return res.status(201).json(newSchool);
     } catch (error) {
